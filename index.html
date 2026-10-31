@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="theme-color" content="#10172b">
+  <title>Climb, Cube, Climb!</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="game-shell">
+    <canvas id="game" aria-label="Climb Cube Climb platform game"></canvas>
+    <header class="hud">
+      <a class="brand" href="#" aria-label="Climb Cube Climb home"><span class="brand-cube"></span><span>CLIMB<span class="brand-light">, CUBE, CLIMB!</span></span></a>
+      <div class="hud-stats">
+        <div class="stat"><span class="stat-label">ALTITUDE</span><strong id="height">0m</strong></div>
+        <div class="stat"><span class="stat-label">BEST</span><strong id="best">0m</strong></div>
+      </div>
+      <button id="pause-button" class="icon-button" aria-label="Pause game" title="Pause">Ⅱ</button>
+    </header>
+    <div class="ability-bar" id="ability-bar">
+      <div class="ability locked" id="burst-status"><kbd>SHIFT</kbd><span><b>BURST</b><small>Unlock at 900m</small></span></div>
+      <div class="ability locked" id="freeze-status"><kbd>E</kbd><span><b>FREEZE</b><small>Unlock at 1,800m</small></span></div>
+    </div>
+    <section class="overlay" id="start-screen">
+      <div class="menu-card">
+        <div class="eyebrow">A LITTLE GAME ABOUT GOING UP</div>
+        <div class="hero-cube"><span></span></div>
+        <h1>CLIMB, CUBE<br><em>CLIMB!</em></h1>
+        <p>It's only up from here. Probably.</p>
+        <button class="primary-button" id="play-button">START CLIMBING <span>↗</span></button>
+        <div class="control-hint"><span>← →</span> MOVE <i>·</i> <span>HOLD SPACE</span> CHARGE <i>·</i> <span>RELEASE</span> JUMP</div>
+      </div>
+    </section>
+    <section class="overlay hidden" id="pause-screen">
+      <div class="menu-card compact">
+        <div class="eyebrow">TAKE A BREATHER</div><h2>PAUSED</h2><p>Your climb is waiting.</p>
+        <button class="primary-button" id="resume-button">KEEP CLIMBING <span>↗</span></button>
+        <button class="text-button" id="restart-button">Restart run</button>
+      </div>
+    </section>
+    <section class="overlay hidden" id="fall-screen">
+      <div class="menu-card compact">
+        <div class="eyebrow">GRAVITY WINS THIS ROUND</div><h2>WHOOPS.</h2><p>You reached <strong id="run-height">0m</strong>. Every fall is a new lesson.</p>
+        <button class="primary-button" id="again-button">TRY AGAIN <span>↗</span></button>
+        <button class="text-button" id="fall-menu-button">Back to title</button>
+      </div>
+    </section>
+    <div class="toast" id="toast"></div>
+    <div class="touch-controls" id="touch-controls">
+      <div class="touch-move"><button data-hold="left" aria-label="Move left">←</button><button data-hold="right" aria-label="Move right">→</button></div>
+      <div class="touch-actions"><button data-hold="burst" id="touch-burst" aria-label="Burst" disabled>BURST</button><button data-hold="freeze" id="touch-freeze" aria-label="Freeze" disabled>FREEZE</button><button data-hold="jump" class="jump-button" aria-label="Charge and jump">HOLD<br>JUMP</button></div>
+    </div>
+    <footer class="footer-note">A PRECISION PLATFORMER <span>•</span> DON'T LOOK DOWN</footer>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
