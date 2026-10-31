@@ -6,11 +6,11 @@ const ui={height:$('height'),best:$('best'),start:$('start-screen'),pause:$('pau
 let W=0,H=0,dpr=1,last=0,toastTimer=0;
 const WORLD={width:900,gravity:1900,goal:52000};
 const input={left:false,right:false,jump:false};
-let state='title',player=null,platforms=[],particles=[],trail=[],cameraY=0;
+let state='title',player=null,platforms=[],particles=[],trail=[],cameraY=0,audioCtx=null;
 let best=Number(localStorage.getItem('ccc-best')||0),checkpoint=0,highest=0,elapsed=0,charging=0,freezeTime=0,burstCooldown=0,freezeCooldown=0;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rand=(a,b)=>a+Math.random()*(b-a),scale=()=>W/WORLD.width,viewH=()=>H/scale();
 ui.best.textContent=best+'m';
-function resize(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0)}
+function tone(freq=440,duration=.08,wave='sine'){try{if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume();const osc=audioCtx.createOscillator(),gain=audioCtx.createGain();osc.type=wave;osc.frequency.value=freq;gain.gain.setValueAtTime(.045,audioCtx.currentTime);gain.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+duration);osc.connect(gain);gain.connect(audioCtx.destination);osc.start();osc.stop(audioCtx.currentTime+duration)}catch(_){}}\nfunction resize(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0)}
 addEventListener('resize',resize);resize();
 function platform(x,y,w,type='normal'){return{x,y,w,h:16,type,fallAt:0}}
 function makeWorld(){
@@ -39,13 +39,13 @@ function spawnAt(y,keepCheckpoint=false){
 }
 function reset(){checkpoint=0;spawnAt(0)}
 function pause(){if(state==='playing'){state='paused';ui.pause.classList.remove('hidden')}else if(state==='paused'){state='playing';ui.pause.classList.add('hidden')}}
-function burst(){if(state!=='playing'||highest<9000||burstCooldown>0||player.onGround)return;burstCooldown=3;player.vx=player.face*690;player.vy=680;emit(player.x+17,player.y+17,'#d7ff76',18);showToast('BURST!');updateHUD()}
-function freeze(){if(state!=='playing'||highest<18000||freezeCooldown>0||player.onGround)return;freezeCooldown=7;freezeTime=1.05;player.vy=0;emit(player.x+17,player.y+17,'#83eaff',20);showToast('TIME TO THINK.');updateHUD()}
+function burst(){if(state!=='playing'||highest<9000||burstCooldown>0||player.onGround)return;burstCooldown=3;tone(250,.16,'sawtooth');player.vx=player.face*690;player.vy=680;emit(player.x+17,player.y+17,'#d7ff76',18);showToast('BURST!');updateHUD()}
+function freeze(){if(state!=='playing'||highest<18000||freezeCooldown>0||player.onGround)return;freezeCooldown=7;tone(740,.22,'sine');freezeTime=1.05;player.vy=0;emit(player.x+17,player.y+17,'#83eaff',20);showToast('TIME TO THINK.');updateHUD()}
 function land(p){
  player.y=p.y+player.h;player.vy=p.type==='bouncy'?820:0;player.onGround=true;
- if(p.type==='bouncy'){emit(player.x+17,p.y,'#ff9bc7',12);showToast('BOING!')}
+ if(p.type==='bouncy'){emit(player.x+17,p.y,'#ff9bc7',12);tone(680,.12,'sine');showToast('BOING!')}
  if(p.type==='crumble'&&!p.fallAt)p.fallAt=elapsed+.48;
- if(p.type==='checkpoint'&&p.y>checkpoint){checkpoint=p.y;showToast('CHECKPOINT REACHED');}
+ if(p.type==='checkpoint'&&p.y>checkpoint){checkpoint=p.y;tone(880,.18,'triangle');showToast('CHECKPOINT REACHED');}
 }
 function die(){if(state!=='playing')return;state='fall';ui.runHeight.textContent=Math.floor(highest/10)+'m';ui.fall.classList.remove('hidden');}
 function update(dt){
@@ -55,7 +55,7 @@ function update(dt){
  if(dir){player.face=dir;player.vx+=dir*2100*dt}else player.vx*=Math.pow(.0008,dt);
  player.vx=clamp(player.vx,-390,390);
  if(input.jump&&player.onGround)charging=Math.min(1,charging+dt*1.15);
- if(!input.jump&&charging>0&&player.onGround){const power=charging;player.vy=470+power*750;player.vx+=player.face*(90+power*210);player.onGround=false;emit(player.x+17,player.y,'#d7ff76',8);charging=0}
+ if(!input.jump&&charging>0&&player.onGround){const power=charging;player.vy=470+power*750;player.vx+=player.face*(90+power*210);player.onGround=false;tone(420+power*260,.1,'triangle');emit(player.x+17,player.y,'#d7ff76',8);charging=0}
  if(freezeTime>0){freezeTime-=dt;player.vy=0}else player.vy-=WORLD.gravity*dt;
  const oldY=player.y;player.x+=player.vx*dt;player.y+=player.vy*dt;player.x=clamp(player.x,0,WORLD.width-player.w);player.onGround=false;
  if(player.vy<=0){for(const p of platforms){if(p.fallAt&&elapsed>=p.fallAt){p.y=-99999;continue}if(player.x+player.w>p.x&&player.x<p.x+p.w&&oldY>=p.y+player.h-2&&player.y<=p.y+player.h){land(p);break}}}
@@ -86,7 +86,7 @@ function draw(){
  if(state==='won'){ctx.fillStyle='#0b1226bb';ctx.fillRect(0,0,W,H);ctx.fillStyle='#d7ff76';ctx.textAlign='center';ctx.font='bold 42px sans-serif';ctx.fillText('YOU MADE IT!',W/2,H/2);ctx.textAlign='start'}
 }
 function frame(t){const dt=(t-last)/1000||0;last=t;update(dt);draw();requestAnimationFrame(frame)}requestAnimationFrame(frame);
-$('play-button').addEventListener('click',reset);$('resume-button').addEventListener('click',pause);$('pause-button').addEventListener('click',pause);$('restart-button').addEventListener('click',reset);
+$('play-button').addEventListener('click',()=>{tone(520,.12,'triangle');reset()});$('resume-button').addEventListener('click',pause);$('pause-button').addEventListener('click',pause);$('restart-button').addEventListener('click',reset);
 $('again-button').addEventListener('click',()=>{if(checkpoint>0)spawnAt(checkpoint,true);else reset()});
 $('fall-menu-button').addEventListener('click',()=>{state='title';ui.fall.classList.add('hidden');ui.start.classList.remove('hidden')});
 addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight',' ','ArrowUp'].includes(e.key))e.preventDefault();if(e.repeat)return;if(e.key==='Escape'||e.key==='p'){pause();return}if(e.key===' '||e.key==='ArrowUp'||e.key==='w')input.jump=true;if(e.key==='ArrowLeft'||e.key==='a')input.left=true;if(e.key==='ArrowRight'||e.key==='d')input.right=true;if(e.key==='Shift')burst();if(e.key==='e')freeze()});
