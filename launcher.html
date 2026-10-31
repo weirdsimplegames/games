@@ -7,8 +7,9 @@
 <title>Climb Cube Climb — Launcher</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap');
-:root{color-scheme:dark;--lime:#d7ff76;--muted:#9ba8c3}
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b1020;color:#f6f8ff;font-family:'Space Grotesk',sans-serif}
+:root{color-scheme:dark;--lime:#d7ff76}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b1020;color:#f6f8ff;font-family:'Space Grotesk',sans-serif}
 body{background:radial-gradient(ellipse at 50% 35%,#1b2b4b 0,#10182c 45%,#090e1b 100%)}
 #launcher{height:100%;display:grid;place-items:center;padding:24px}
 .card{width:min(480px,100%);padding:42px 38px 30px;border:1px solid #ffffff20;border-radius:28px;background:linear-gradient(145deg,#1b2946e8,#111a30ed);box-shadow:0 30px 100px #0008;text-align:center;backdrop-filter:blur(20px)}
@@ -20,17 +21,13 @@ h1 em{font-style:normal;color:var(--lime)}
 p{margin:13px 0 25px;color:#aebbd2;font-size:14px;line-height:1.6}
 button{font:inherit;cursor:pointer}
 #launch{width:100%;padding:16px;border:0;border-radius:13px;background:var(--lime);color:#17220e;font-size:12px;font-weight:700;letter-spacing:.12em;transition:.18s}
-#launch:hover{filter:brightness(1.06);transform:translateY(-2px)}#launch:disabled{opacity:.6;cursor:wait;transform:none}
+#launch:hover{filter:brightness(1.06);transform:translateY(-2px)}
+#launch:disabled{opacity:.6;cursor:wait;transform:none}
 .status{display:flex;align-items:center;justify-content:center;gap:9px;margin-top:18px;color:#9ba8c3;font:10px 'DM Mono',monospace;letter-spacing:.05em}
-.dot{width:7px;height:7px;border-radius:50%;background:#71809d}.dot.live{background:var(--lime);box-shadow:0 0 12px #d7ff76}
+.dot{width:7px;height:7px;border-radius:50%;background:#71809d}
+.dot.live{background:var(--lime);box-shadow:0 0 12px #d7ff76}
 .error{display:none;margin-top:17px;padding:12px;border:1px solid #ff8c8c55;border-radius:10px;background:#ff777710;color:#ffb6b6;font-size:12px;line-height:1.5}
 .bottom{margin-top:25px;padding-top:18px;border-top:1px solid #ffffff14;color:#74829f;font:9px 'DM Mono',monospace;letter-spacing:.12em}
-#game-view{display:none;position:fixed;inset:0;background:#10172b}
-#game-frame{display:block;width:100%;height:100%;border:0;background:#10172b}
-.game-tools{position:absolute;z-index:20;top:12px;right:12px;display:flex;gap:8px;opacity:.22;transition:opacity .2s}
-.game-tools:hover,.game-tools:focus-within{opacity:1}
-.tool{width:39px;height:39px;border:1px solid #ffffff30;border-radius:11px;background:#10172bdd;color:white;backdrop-filter:blur(12px)}
-#loading-cover{position:fixed;inset:0;display:none;place-items:center;background:#0b1020;color:#d7ff76;font:12px 'DM Mono',monospace;letter-spacing:.12em;z-index:30}
 @media(max-width:520px){.card{padding:34px 23px 24px;border-radius:22px}#launcher{padding:16px}}
 </style>
 </head>
@@ -40,15 +37,14 @@ button{font:inherit;cursor:pointer}
   <div class="mark"></div>
   <div class="kicker">A LITTLE GAME ABOUT GOING UP</div>
   <h1>CLIMB, CUBE<br><em>CLIMB!</em></h1>
-  <p>Ready to climb? The launcher fetches the latest game files straight from GitHub every time you start.</p>
+  <p>Ready to climb? The latest game files are loaded from GitHub every time you play.</p>
   <button id="launch">PLAY NOW <span aria-hidden="true">↗</span></button>
   <div class="status"><span class="dot" id="dot"></span><span id="status-text">CONNECTED TO GITHUB · READY</span></div>
   <div class="error" id="error" role="alert"></div>
   <div class="bottom">LIVE VERSION · GITHUB MAIN BRANCH</div>
  </section>
 </main>
-</body>
-</html<script>
+<script>
 (()=> {
  'use strict';
  const RAW='https://raw.githubusercontent.com/weirdsimplegames/games/main/';
@@ -58,91 +54,32 @@ button{font:inherit;cursor:pointer}
  const error=document.getElementById('error');
  let busy=false;
  function setStatus(message,online=false){status.textContent=message;dot.classList.toggle('live',online)}
- function showError(message){error.textContent=message;error.style.display='block';launch.disabled=false;launch.textContent='TRY AGAIN ↻';busy=false;setStatus('COULD NOT OPEN GAME')}
+ function showError(message){error.textContent=message;error.style.display='block';launch.disabled=false;launch.textContent='TRY AGAIN ↻';busy=false;setStatus('COULD NOT LOAD GAME')}
  async function startGame(){
   if(busy)return;
-  // Must open synchronously during the click so the browser permits the new tab.
   const gameWindow=window.open('about:blank','_blank');
-  if(!gameWindow){showError('Your browser blocked the new tab. Allow pop-ups for this launcher, then try again.');return}
-  busy=true;launch.disabled=true;launch.textContent='LOADING GAME…';error.style.display='none';
-  setStatus('FETCHING RAW GITHUB GAME…');
+  if(!gameWindow){showError('The browser blocked the new tab. Allow pop-ups for this launcher, then try again.');return}
+  busy=true;launch.disabled=true;launch.textContent='LOADING GAME…';error.style.display='none';setStatus('FETCHING GAME FROM GITHUB…');
   try{
    const response=await fetch(RAW+'index.html?cache='+Date.now(),{cache:'no-store'});
-   if(!response.ok)throw new Error('GitHub returned HTTP '+response.status+'.');
+   if(!response.ok)throw new Error('GitHub returned HTTP '+response.status);
    let html=await response.text();
-   if(!/<html[\\s>]/i.test(html))throw new Error('GitHub did not return a valid game page.');
-   // The tab itself remains about:blank. The game runs in an iframe inside it,
-   // with the raw GitHub URL as its base so style.css and game.js load from GitHub.
+   if(!html.toLowerCase().includes('<html'))throw new Error('GitHub did not return the game HTML.');
    const base='<base href="'+RAW+'">';
-   if(/<head[^>]*>/i.test(html))html=html.replace(/<head([^>]*)>/i,'<head$1>'+base);
-   else html=base+html;
-   if(gameWindow.closed)throw new Error('The about:blank tab was closed.');
+   if(/<head\\b[^>]*>/i.test(html))html=html.replace(/<head\\b([^>]*)>/i,'<head$1>'+base);else html=base+html;
+   if(gameWindow.closed)throw new Error('The game tab was closed before loading.');
    gameWindow.document.open();
    gameWindow.document.write('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Climb Cube Climb</title><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#10172b}iframe{display:block;width:100%;height:100%;border:0}</style></head><body><iframe id="game" title="Climb Cube Climb"></iframe></body></html>');
    gameWindow.document.close();
-   const gameFrame=gameWindow.document.getElementById('game');
-   gameFrame.srcdoc=html;
-   setStatus('GAME OPENED IN ABOUT:BLANK',true);
-   launch.disabled=false;launch.textContent='OPEN GAME AGAIN ↗';busy=false;
+   gameWindow.document.getElementById('game').srcdoc=html;
+   setStatus('GAME OPENED IN ABOUT:BLANK',true);launch.disabled=false;launch.textContent='OPEN GAME AGAIN ↗';busy=false;
   }catch(err){
-   if(!gameWindow.closed){
-    gameWindow.document.open();
-    gameWindow.document.write('<!doctype html><meta charset="utf-8"><title>Could not load game</title><body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#0b1020;color:#f6f8ff;font:16px system-ui"><main style="max-width:520px;padding:32px"><h2>Could not load the game</h2><p>'+String(err.message).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))+'</p></main></body>');
-    gameWindow.document.close();
-   }
+   if(!gameWindow.closed){const msg=String(err.message).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));gameWindow.document.open();gameWindow.document.write('<!doctype html><meta charset="utf-8"><title>Game loading error</title><body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#0b1020;color:#f6f8ff;font:16px system-ui"><main style="max-width:520px;padding:32px"><h2>Could not load the game</h2><p>'+msg+'</p></main></body>');gameWindow.document.close()}
    showError('Could not load the game. Check your connection and try again. ('+err.message+')');
   }
  }
  launch.addEventListener('click',startGame);
 })();
-</script>e html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#0b1020">
-<title>Climb Cube Climb — Launcher</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap');
-:root{color-scheme:dark;--lime:#d7ff76;--muted:#9ba8c3}
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b1020;color:#f6f8ff;font-family:'Space Grotesk',sans-serif}
-body{background:radial-gradient(ellipse at 50% 35%,#1b2b4b 0,#10182c 45%,#090e1b 100%)}
-#launcher{height:100%;display:grid;place-items:center;padding:24px}
-.card{width:min(480px,100%);padding:42px 38px 30px;border:1px solid #ffffff20;border-radius:28px;background:linear-gradient(145deg,#1b2946e8,#111a30ed);box-shadow:0 30px 100px #0008;text-align:center;backdrop-filter:blur(20px)}
-.mark{width:62px;height:62px;margin:0 auto 22px;display:grid;place-items:center;transform:rotate(-9deg);border-radius:17px;background:linear-gradient(145deg,#efffae,#a7e74d);box-shadow:9px 10px 0 #719d3d,0 15px 40px #baff5b38}
-.mark:after{content:"";width:28px;height:28px;border:3px solid #fff9;border-radius:8px}
-.kicker{font:10px 'DM Mono',monospace;letter-spacing:.2em;color:#a6b4d0}
-h1{font-size:clamp(35px,8vw,51px);line-height:.94;letter-spacing:-.075em;margin:13px 0}
-h1 em{font-style:normal;color:var(--lime)}
-p{margin:13px 0 25px;color:#aebbd2;font-size:14px;line-height:1.6}
-button{font:inherit;cursor:pointer}
-#launch{width:100%;padding:16px;border:0;border-radius:13px;background:var(--lime);color:#17220e;font-size:12px;font-weight:700;letter-spacing:.12em;transition:.18s}
-#launch:hover{filter:brightness(1.06);transform:translateY(-2px)}#launch:disabled{opacity:.6;cursor:wait;transform:none}
-.status{display:flex;align-items:center;justify-content:center;gap:9px;margin-top:18px;color:#9ba8c3;font:10px 'DM Mono',monospace;letter-spacing:.05em}
-.dot{width:7px;height:7px;border-radius:50%;background:#71809d}.dot.live{background:var(--lime);box-shadow:0 0 12px #d7ff76}
-.error{display:none;margin-top:17px;padding:12px;border:1px solid #ff8c8c55;border-radius:10px;background:#ff777710;color:#ffb6b6;font-size:12px;line-height:1.5}
-.bottom{margin-top:25px;padding-top:18px;border-top:1px solid #ffffff14;color:#74829f;font:9px 'DM Mono',monospace;letter-spacing:.12em}
-#game-view{display:none;position:fixed;inset:0;background:#10172b}
-#game-frame{display:block;width:100%;height:100%;border:0;background:#10172b}
-.game-tools{position:absolute;z-index:20;top:12px;right:12px;display:flex;gap:8px;opacity:.22;transition:opacity .2s}
-.game-tools:hover,.game-tools:focus-within{opacity:1}
-.tool{width:39px;height:39px;border:1px solid #ffffff30;border-radius:11px;background:#10172bdd;color:white;backdrop-filter:blur(12px)}
-#loading-cover{position:fixed;inset:0;display:none;place-items:center;background:#0b1020;color:#d7ff76;font:12px 'DM Mono',monospace;letter-spacing:.12em;z-index:30}
-@media(max-width:520px){.card{padding:34px 23px 24px;border-radius:22px}#launcher{padding:16px}}
-</style>
-</head>
-<body>
-<main id="launcher">
- <section class="card">
-  <div class="mark"></div>
-  <div class="kicker">A LITTLE GAME ABOUT GOING UP</div>
-  <h1>CLIMB, CUBE<br><em>CLIMB!</em></h1>
-  <p>Ready to climb? The launcher fetches the latest game files straight from GitHub every time you start.</p>
-  <button id="launch">PLAY NOW <span aria-hidden="true">↗</span></button>
-  <div class="status"><span class="dot" id="dot"></span><span id="status-text">CONNECTED TO GITHUB · READY</span></div>
-  <div class="error" id="error" role="alert"></div>
-  <div class="bottom">LIVE VERSION · GITHUB MAIN BRANCH</div>
- </section>
-</main>
+</script>
 </body>
 </html>
